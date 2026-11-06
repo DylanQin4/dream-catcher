@@ -1,6 +1,6 @@
 logs
 *.log
-mode_modules
+node_modules
 .env
 hint.md
 dreams.db
