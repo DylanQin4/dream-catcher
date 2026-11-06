@@ -1,0 +1,6 @@
+logs
+*.log
+mode_modules
+.env
+hint.md
+dreams.db
