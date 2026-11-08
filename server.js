@@ -47,10 +47,38 @@ app.get('/health', async (req, res) => {
 app.use('/api/dreams', dreamsRouter);
 
 // Initialize database then start server
+let server;
+
 initDatabase().then(() => {
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }).catch(error => {
   console.error('Failed to initialize database:', error);
+  process.exit(1);
 });
+
+
+async function gracefulShutdown(signal) {
+  console.log(`Received ${signal}. Closing server...`);
+  // Close the server to stop accepting new connections
+  if (server) {
+    server.close(async () => {
+      console.log('Server closed.');
+      // Close the database pool
+      try {
+        await pool.end();
+        console.log('Database pool closed.');
+      } catch (error) {
+        console.error('Error closing database pool:', error);
+      }
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+}
+
+// Handle termination signals for graceful shutdown
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
